@@ -23,7 +23,7 @@ def multi_process(main_config, task_config, tid_gpu, tasks):
 
 
 def crossValid(main_config, task_config, device, tasks):
-    model_name = main_config['model_name']
+    model_name = main_config['model_name']      # dictionary
     csv_dir = main_config['csv_dir']
     for i in range(5):
         main_config['csv_dir'] = csv_dir + 'cross{}/'.format(i)

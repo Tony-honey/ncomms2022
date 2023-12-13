@@ -77,12 +77,13 @@ class MultiModal_CNN_Bone(nn.Module):
         output = self.forward(case, feature)
         return output.shape[1]
 
-
+# 自定义的卷积层
 class ConvLayer(nn.Module):
     def __init__(self, in_channels, out_channels, kernel, pooling, drop_rate, BN=True, relu_type='leaky'):
         super(ConvLayer, self).__init__()
         kernel_size, kernel_stride, kernel_padding = kernel
         pool_kernel, pool_stride, pool_padding = pooling
+        # 三维卷积
         self.conv = nn.Conv3d(in_channels, out_channels, kernel_size, kernel_stride, kernel_padding, bias=False)
         self.pooling = nn.MaxPool3d(pool_kernel, pool_stride, pool_padding)
         self.BN = nn.BatchNorm3d(out_channels)
