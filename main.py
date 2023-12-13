@@ -119,7 +119,7 @@ if __name__ == "__main__":
     #      task_config = read_json('task_config.json'))
 
     crossValid(tasks = ['COG', 'ADD'],
-               device = 2,
+               device = 0,
                main_config = read_json('config.json'),
                task_config = read_json('task_config.json'))
 

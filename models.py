@@ -127,6 +127,7 @@ class ConvLayer2(nn.Module):
 class _CNN_Bone(nn.Module):
     def __init__(self, config):
         super(_CNN_Bone, self).__init__()
+        # fil_num is the number of filter
         num, p = config['fil_num'], config['drop_rate']
         self.block1 = ConvLayer(1, num, (7, 2, 0), (3, 2, 0), p)
         self.block2 = ConvLayer(num, 2*num, (4, 1, 0), (2, 2, 0), p)
@@ -140,12 +141,13 @@ class _CNN_Bone(nn.Module):
         x = self.block3(x)
         x = self.block4(x)
         batch_size = x.shape[0]
+        # 将每个样本flatten
         x = x.view(batch_size, -1)
         return x
 
     def test_size(self):
-        case = torch.ones((1, 1, 182, 218, 182))
-        output = self.forward(case)
+        case = torch.ones((1, 1, 182, 218, 182))  
+        output = self.forward(case)     # 输出维度1*5760
         return output.shape[1]
 
 
@@ -175,7 +177,8 @@ class MLP(nn.Module):
 
     def dense_to_conv(self):
         fcn = copy.deepcopy(self)
-        A = fcn.dense1[1].weight.view(self.fil_num, self.in_size//(6*6*6), 6, 6, 6)
+        # 6*6*6维度不正确，4*4*4倒是可以
+        A = fcn.dense1[1].weight.view(self.fil_num, self.in_size//(6*6*6), 6, 6, 6)     
         B = fcn.dense2[2].weight.view(self.out_size, self.fil_num, 1, 1, 1)
         C = fcn.dense1[1].bias
         D = fcn.dense2[2].bias

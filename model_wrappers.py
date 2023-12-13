@@ -101,6 +101,7 @@ class Multask_Wrapper:
         for task in tasks:
             if task not in self.config:                     # if the task was not specified in the self.config
                 self.config[task] = self.config['default']  # use default task setting
+        # self.backbone.size 是CNN最后的输出通道数量，对于backbone来说，这个值是5760
         self.MLPs = [MLP(self.backbone.size, self.config[t]).to(self.device) for t in tasks]
         print(self.MLPs)
 
@@ -118,6 +119,7 @@ class Multask_Wrapper:
 
 
     def train(self):
+        # 异步记录训练过程
         self.writer = SummaryWriter(self.tb_log_dir)
         for self.epoch in range(self.num_epochs):
             self.train_an_epoch()
@@ -343,6 +345,7 @@ class Multask_Wrapper:
 
     ###############################################################################################################
     # below methods are internal methods and won't be called from outside of the class
+    # 回归用MSE，分类用交叉熵
     def get_losses(self, tasks):
         losses = []
         for task in tasks:
@@ -384,6 +387,8 @@ class Multask_Wrapper:
     @timeit
     def valid_an_epoch(self, metric='AUC'):
         self.gen_score(['valid'], load_weight=False)  # using default thres value to generate score for validation set
+        # MCC = (TP × TN - FP × FN) / sqrt((TP + FP) × (TP + FN) × (TN + FP) × (TN + FN))
+        # MCC在±1之间，+1表示完全正确，-1表示完全相反，0表示随机猜测
         if metric == 'MCC':
             thres = self.get_optimal_thres('valid')       # get optimal thres for validation
             self.gen_score(['valid'], thres, load_weight=False) # apply the optimal thres on validation to generate score and pred
@@ -395,11 +400,12 @@ class Multask_Wrapper:
     def forward_task(self, i, inputs, labels):
         labels = self.cast_labels(labels, self.tasks[i])
         inputs, labels = inputs.to(self.device), labels.to(self.device)
-        preds = self.MLPs[i](self.backbone(inputs))
+        preds = self.MLPs[i](self.backbone(inputs))     # 先喂到CNN，再喂给FCN
         loss = self.losses[i](preds, labels) * float(self.config[self.tasks[i]]['factor'])
         return preds, loss, labels
 
     def set_train_status(self, mode):
+        # If calling model.train(True), then model will activate BN Layer and Dropout!
         for model in self.MLPs:
             model.train(mode)
         self.backbone.train(mode)
